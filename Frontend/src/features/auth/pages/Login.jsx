@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate} from 'react-router'
+import { Link, useNavigate, Navigate } from 'react-router'
 import { useAuth } from '../hook/useAuth'
-import useSelector from 'react-redux'
-import { Navigate } from 'react-router'
+import { useSelector } from 'react-redux'
 
 const Login = () => {
     const navigate = useNavigate();

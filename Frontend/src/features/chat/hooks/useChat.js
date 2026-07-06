@@ -1,6 +1,6 @@
-import { initializeSocketConnection } from "../service/chat.socket";
-import { sendMessage, getChats, getMessages, deleteChat } from "../service/chat.api";
-import { setChats, setCurrentChatId, setError, setLoading, createNewChat, addNewMessage, addMessages } from "../chat.slice";
+import { initializeSocketConnection } from "../services/chat.socket.js";
+import { sendMessage, getChats, getMessages, deleteChat } from "../services/chat.api.js";
+import { setChats, setCurrentChatId, setError, setLoading, createNewChat, addNewMessage, addMessages } from "../chat.slice.js";
 import { useDispatch } from "react-redux";
 
 
@@ -13,29 +13,34 @@ export const useChat = () => {
         dispatch(setLoading(true))
         const data = await sendMessage({ message, chatId })
         const { chat, aiMessage } = data
-        if (!chatId)
+        const currentId = chatId || chat._id
+
+        if (!chatId) {
             dispatch(createNewChat({
-                chatId: chat._id,
+                chatId: currentId,
                 title: chat.title,
             }))
+        }
+
         dispatch(addNewMessage({
-            chatId: chatId || chat._id,
+            chatId: currentId,
             content: message,
             role: "user",
         }))
         dispatch(addNewMessage({
-            chatId: chatId || chat._id,
+            chatId: currentId,
             content: aiMessage.content,
             role: aiMessage.role,
         }))
-        dispatch(setCurrentChatId(chat._id))
+        dispatch(setCurrentChatId(currentId))
+        localStorage.setItem('currentChatId', currentId)
     }
 
-    async function handleGetChats() {
+    async function handleGetChats({ restoreChatId } = {}) {
         dispatch(setLoading(true))
         const data = await getChats()
         const { chats } = data
-        dispatch(setChats(chats.reduce((acc, chat) => {
+        const chatMap = chats.reduce((acc, chat) => {
             acc[ chat._id ] = {
                 id: chat._id,
                 title: chat.title,
@@ -43,13 +48,19 @@ export const useChat = () => {
                 lastUpdated: chat.updatedAt,
             }
             return acc
-        }, {})))
+        }, {})
+        dispatch(setChats(chatMap))
+
+        if (restoreChatId && chatMap[restoreChatId]) {
+            await handleOpenChat(restoreChatId, chatMap)
+        } else if (restoreChatId) {
+            localStorage.removeItem('currentChatId')
+        }
+
         dispatch(setLoading(false))
     }
 
     async function handleOpenChat(chatId, chats) {
-
-        console.log(chats[ chatId ]?.messages.length)
 
         if (chats[ chatId ]?.messages.length === 0) {
             const data = await getMessages(chatId)
@@ -66,6 +77,7 @@ export const useChat = () => {
             }))
         }
         dispatch(setCurrentChatId(chatId))
+        localStorage.setItem('currentChatId', chatId)
     }
 
     return {

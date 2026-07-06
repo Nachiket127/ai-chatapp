@@ -1,16 +1,20 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../hook/useAuth'
 
 const Register = () => {
+    const navigate = useNavigate();
+    const { handleRegister } = useAuth();
 
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log('Register submitted:', formData)
+    await handleRegister({ email, password, username })
+    navigate('/login')
   }
 
   return (
