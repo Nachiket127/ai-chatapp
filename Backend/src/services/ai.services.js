@@ -31,7 +31,7 @@ const agent = createAgent({
 })
 
 export async function generateResponse(messages) {
-    console.log(messages)
+    //console.log(messages)
 
     const response = await agent.invoke({
         messages: [

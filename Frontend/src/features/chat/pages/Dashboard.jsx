@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useSelector } from 'react-redux'
-import { useChat } from '../hooks/useChat.js'
+import { useChat } from '../hooks/useChat'
 import remarkGfm from 'remark-gfm'
 
 
@@ -10,19 +10,11 @@ const Dashboard = () => {
   const [ chatInput, setChatInput ] = useState('')
   const chats = useSelector((state) => state.chat.chats)
   const currentChatId = useSelector((state) => state.chat.currentChatId)
-  const messagesEndRef = useRef(null)
 
   useEffect(() => {
     chat.initializeSocketConnection()
-    const restoreChatId = localStorage.getItem('currentChatId')
-    chat.handleGetChats({ restoreChatId })
+    chat.handleGetChats()
   }, [])
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    }
-  }, [currentChatId, chats])
 
   const handleSubmitMessage = (event) => {
     event.preventDefault()
@@ -89,7 +81,6 @@ const Dashboard = () => {
                 )}
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
 
           <footer className='rounded-3xl w-full absolute bottom-2 border border-white/60 bg-[#080b12] p-4 md:p-5'>
