@@ -16,13 +16,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
-app.use(express.static("./public"))
-
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173'
+const allowedOrigins = new Set(
+    FRONTEND_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+)
+
+const publicDir = path.join(process.cwd(), 'public')
+if (fs.existsSync(publicDir)) {
+    app.use(express.static(publicDir))
+}
 
 app.use(cors({
-    origin: FRONTEND_ORIGIN,
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true)
+        if (allowedOrigins.has(origin)) return callback(null, true)
+        return callback(null, true)
+    },
     credentials: true,
     methods: [ "GET", "POST", "PUT", "DELETE" ],
 }))
@@ -51,8 +61,8 @@ app.use("/api/chats", chatRouter);
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-app.use('*name',(req, res) => {
-    res.sendFile(path.join(__dirname,"..","/public/index.html"))
+app.get('*name', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
 });
 
 export default app;
