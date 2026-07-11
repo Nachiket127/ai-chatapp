@@ -4,6 +4,9 @@ import authRouter from "./routes/auth.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import morgan from "morgan";
 import cors from "cors";
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 
 const app = express();
 
@@ -12,8 +15,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173'
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: FRONTEND_ORIGIN,
     credentials: true,
     methods: [ "GET", "POST", "PUT", "DELETE" ],
 }))
@@ -25,5 +30,18 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/chats", chatRouter);
+
+// Serve frontend production build when available
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const clientDist = path.join(__dirname, '../../Frontend/dist')
+
+if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist))
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(clientDist, 'index.html'))
+    })
+}
 
 export default app;
